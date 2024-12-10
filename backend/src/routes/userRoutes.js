@@ -1,5 +1,5 @@
 import express from 'express';
-import { userLoginStatus, updateUser, getUser, loginUser, registerUser, logoutUser } from '../controllers/auth/userController.js';
+import { verifyEmail, userLoginStatus, updateUser, getUser, loginUser, registerUser, logoutUser } from '../controllers/auth/userController.js';
 import { creatorMiddleware, adminMiddleware, protect } from '../middleware/authMiddleware.js';
 import { getAllUsers, deleteUser } from '../controllers/auth/adminController.js';
 
@@ -18,5 +18,8 @@ router.get("/admin/users", protect, creatorMiddleware, getAllUsers);
 
 //login status
 router.get("/login-status", userLoginStatus);
+
+//verify user (email)
+router.get("/verify-email", protect, verifyEmail)
 
 export default router;
