@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from "../../models/auth/UserModel.js"
 import generateToken from '../../helpers/generateToken.js';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'
 import Token from '../../models/auth/Token.js';
 import crypto from "node:crypto"
 import hashToken from '../../helpers/hashToken.js';
@@ -247,4 +247,97 @@ export const verifyUser = asyncHandler(async (req, res)=>{
     user.isVerified = true;
     await user.save();
     res.status(200).json({message: "User verified"});
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if(!email){
+        return res.status(400).json({ message: "Email is required"});
+    }
+    const user = await User.findOne({email});
+    if(!user){
+        return res.status(404).json({message: "User not found"});
+    }
+    let token = await Token.findOne({userId: user._id});
+    if(token){
+        await token.deleteOne();
+    }
+    const passwordresetToken = crypto.randomBytes(64).toString("hex")+user._id;
+    const hashedToken = hashToken(passwordresetToken);
+    await new Token({
+        userId: user._id,
+        passwordResetToken: hashedToken, 
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60*60*1000,
+    }).save();
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${passwordresetToken}`;
+    console.log("resettoken is below")
+    console.log(passwordresetToken)
+    const subject = "Forgot Password User_Auth";
+    const send_to = user.email;
+    const reply_to = "noreply@gmail.com";
+    const template = "forgotPassword";
+    const send_from = process.env.USER_EMAIL;
+    const name = user.name;
+    const link = resetLink;
+
+    try {
+        await sendEmail(send_to, send_from, name, subject, template, reply_to, link);
+        return res.status(200).json({message: "Email sent"});
+    } catch (error) {
+        console.log("Error sending email", error);
+        return res.status(500).json({message: "Email could not be sent"});
+    }
+});
+
+export const resetPassword = asyncHandler(async (req, res)=>{
+    const {resetPasswordToken} = req.params;
+    const {password} = req.body;
+
+    if(!password){
+        return res.status(400).json({message: "password is required"});
+    }
+    const hashedToken = hashToken(resetPasswordToken);
+    const userToken = await Token.findOne({
+        passwordResetToken: hashedToken,
+        expiresAt: { $gt: Date.now() },
+    });
+    if (!userToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // find user with the user id in the token
+    const user = await User.findById(userToken.userId);
+
+    // update user password
+    user.password = password;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+});
+
+export const changePassword = asyncHandler(async(req, res)=>{
+    const {currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+    
+      //find user by id
+      const user = await User.findById(req.user._id);
+    
+      // compare current password with the hashed password in the database
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+    
+      if (!isMatch) {
+        return res.status(400).json({ message: "Invalid password!" });
+      }
+    
+      // reset password
+      if (isMatch) {
+        user.password = newPassword;
+        await user.save();
+        return res.status(200).json({ message: "Password changed successfully" });
+      } else {
+        return res.status(400).json({ message: "Password could not be changed!" });
+      }
 });

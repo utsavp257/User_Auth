@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyUser, verifyEmail, userLoginStatus, updateUser, getUser, loginUser, registerUser, logoutUser } from '../controllers/auth/userController.js';
+import { changePassword, resetPassword, forgotPassword, verifyUser, verifyEmail, userLoginStatus, updateUser, getUser, loginUser, registerUser, logoutUser } from '../controllers/auth/userController.js';
 import { creatorMiddleware, adminMiddleware, protect } from '../middleware/authMiddleware.js';
 import { getAllUsers, deleteUser } from '../controllers/auth/adminController.js';
 
@@ -24,5 +24,12 @@ router.get("/verify-email", protect, verifyEmail)
 
 //verify user
 router.post("/verify-user/:verificationToken", verifyUser);
+
+//forgot password
+router.post("/forgot-password", forgotPassword);
+
+router.post("/reset-password/:resetPasswordToken", resetPassword);
+
+router.patch("/change-password", protect, changePassword);
 
 export default router;
