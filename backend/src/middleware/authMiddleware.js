@@ -32,10 +32,7 @@ export const adminMiddleware = asyncHandler(async (req, res, next)=> {
 });
 
 export const creatorMiddleware = asyncHandler(async (req, res, next)=> {
-    console.log(req.user)
-    console.log(req.user.role)
     if(req.user && (req.user.role == "admin" || req.user.role == "creator")){
-        console.log("GHusa")
         next();
         return;
     }
