@@ -43,8 +43,6 @@ const sendEmail = async (
       link: link,
     },
   };
-  console.log("sent mail to")
-  console.log(mailOptions)
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Message sent: %s", info.messageId);

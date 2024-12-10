@@ -224,3 +224,27 @@ export const verifyEmail = asyncHandler(async (req, res) => {
         return res.status(500).json({message: "Email could not be sent"});
     }
 });
+
+export const verifyUser = asyncHandler(async (req, res)=>{
+    const {verificationToken} = req.params;
+    if(!verificationToken){
+        return res.status(400).json({message:"Invalid verification token"});
+    }
+    const hashedToken = hashToken(verificationToken);
+    //find user
+    const userToken = await Token.findOne({verificationToken: hashedToken,
+        expiresAt: {$gt: Date.now()}
+    });
+    
+    if(!userToken){
+        return res.status(400).json({message: "Invalid or expired verification token"});
+    }
+
+    const user = await User.findById(userToken.userId);
+    if(user.isVerified){
+        return res.status(400).json({message: "User is already verified"})
+    }
+    user.isVerified = true;
+    await user.save();
+    res.status(200).json({message: "User verified"});
+});
