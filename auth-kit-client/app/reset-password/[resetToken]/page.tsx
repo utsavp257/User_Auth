@@ -109,7 +109,7 @@ function page({ params: paramsPromise }: Props) {
             </button>
           </div>
         </div>
-        {/* <img src="/flurry.png" alt="" /> */}
+        <img src="/flurry.png" alt="" />
       </form>
     </main>
   );

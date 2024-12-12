@@ -4,6 +4,9 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { setUncaughtExceptionCaptureCallback } from 'process';
 
+
+axios.defaults.withCredentials = true;
+
 const UserContext = createContext();
 
 export const UserContextProvider = ({children}) => {
@@ -11,6 +14,7 @@ export const UserContextProvider = ({children}) => {
     const serverUrl = "http://localhost:8000";
     const router = useRouter();
     const [user, setUser] = useState({});
+    const [allUsers, setAllUsers] = useState([]);
     const [userState, setUserState] = useState({
         name: "",
         email: "",
@@ -280,6 +284,26 @@ export const UserContextProvider = ({children}) => {
         }
       };
 
+      const getAllUsers = async () => {
+        setLoading(true);
+        try {
+          const res = await axios.get(
+            `${serverUrl}/api/v1/admin/users`,
+            {},
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          setAllUsers(res.data);
+          setLoading(false);
+        } catch (error) {
+          console.log("Error getting all users", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
+
     //dynamic form handler
     const handlerUserInput =(name)=> (e)=> {
         const value = e.target.value;
@@ -288,6 +312,28 @@ export const UserContextProvider = ({children}) => {
             [name]: value
         }))
     };
+
+    const deleteUser = async (id) => {
+        setLoading(true);
+        try {
+          const res = await axios.delete(
+            `${serverUrl}/api/v1/admin/users/${id}`,
+            {},
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          toast.success("User deleted successfully");
+          setLoading(false);
+          // refresh the users list
+          getAllUsers();
+        } catch (error) {
+          console.log("Error deleting user", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
 
     useEffect(()=> {
         const loginStatusGetUser = async () => {
@@ -299,6 +345,12 @@ export const UserContextProvider = ({children}) => {
         };
         loginStatusGetUser();
     }, [])
+
+    useEffect(() => {
+        if (user.role === "admin") {
+          getAllUsers();
+        }
+      }, [user.role]);
 
     return (
         <UserContext.Provider value={{
@@ -314,7 +366,9 @@ export const UserContextProvider = ({children}) => {
             verifyUser,
             forgotPasswordEmail,
             resetPassword,
-            
+            changePassword,
+            allUsers,
+            deleteUser,
             }}>
             {children}
         </UserContext.Provider>
