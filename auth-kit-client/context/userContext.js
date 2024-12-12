@@ -168,6 +168,47 @@ export const UserContextProvider = ({children}) => {
         }
     };
 
+    const emailVerification = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${serverUrl}/api/v1/verify-email`, {
+                withCredentials: true,
+            }, {});
+            toast.success("Email verification sent successfully.");
+            setLoading(false);
+        } catch (error) {
+            console.log("error sending verification email", error);
+            setLoading(false);
+            toast.error(error.response.data.message);
+        }
+    };
+
+    const verifyUser = async (token) => {
+        setLoading(true);
+        try {
+          const res = await axios.post(
+            `${serverUrl}/api/v1/verify-user/${token}`,
+            {},
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          toast.success("User verified successfully");
+    
+          // refresh the user details
+          getUser();
+    
+          setLoading(false);
+          // redirect to home page
+          router.push("/");
+        } catch (error) {
+          console.log("Error verifying user", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
+
     //dynamic form handler
     const handlerUserInput =(name)=> (e)=> {
         const value = e.target.value;
@@ -198,7 +239,8 @@ export const UserContextProvider = ({children}) => {
             userLoginStatus,
             user,
             updateUser,
-            
+            emailVerification,
+            verifyUser,
             }}>
             {children}
         </UserContext.Provider>
