@@ -1,1 +1,1 @@
-node js and react/next js
+This is a user authentication system based on MongoDB, ExpressJS, React, NodeJS and it also includes NextJS for frontend. It has all basic functionalities of sign-up, login, forgot password, account verification, and admin controls.
