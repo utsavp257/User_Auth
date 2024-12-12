@@ -208,6 +208,77 @@ export const UserContextProvider = ({children}) => {
           setLoading(false);
         }
       };
+    
+      const forgotPasswordEmail = async (email) => {
+        setLoading(true);
+    
+        try {
+          const res = await axios.post(
+            `${serverUrl}/api/v1/forgot-password`,
+            {
+              email,
+            },
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          toast.success("Forgot password email sent successfully");
+          setLoading(false);
+        } catch (error) {
+          console.log("Error sending forgot password email", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
+    
+      // reset password
+      const resetPassword = async (token, password) => {
+        setLoading(true);
+    
+        try {
+          const res = await axios.post(
+            `${serverUrl}/api/v1/reset-password/${token}`,
+            {
+              password,
+            },
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          toast.success("Password reset successfully");
+          setLoading(false);
+          // redirect to login page
+          router.push("/login");
+        } catch (error) {
+          console.log("Error resetting password", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
+    
+      // change password
+      const changePassword = async (currentPassword, newPassword) => {
+        setLoading(true);
+    
+        try {
+          const res = await axios.patch(
+            `${serverUrl}/api/v1/change-password`,
+            { currentPassword, newPassword },
+            {
+              withCredentials: true, // send cookies to the server
+            }
+          );
+    
+          toast.success("Password changed successfully");
+          setLoading(false);
+        } catch (error) {
+          console.log("Error changing password", error);
+          toast.error(error.response.data.message);
+          setLoading(false);
+        }
+      };
 
     //dynamic form handler
     const handlerUserInput =(name)=> (e)=> {
@@ -241,6 +312,9 @@ export const UserContextProvider = ({children}) => {
             updateUser,
             emailVerification,
             verifyUser,
+            forgotPasswordEmail,
+            resetPassword,
+            
             }}>
             {children}
         </UserContext.Provider>
